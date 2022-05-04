@@ -95,9 +95,6 @@ all_img_url = []
 for img_url in content_url.find_all("img"):
     all_img_url.append(img_url.get("src").replace("../../../../" , "https://books.toscrape.com/"))
 
-#print(all_img_url)
-#print(type(all_img_url))
-#print(len(all_img_url))
 
 # Write all data in csv file
 en_tete = [
