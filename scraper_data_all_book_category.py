@@ -6,6 +6,7 @@ Also downloads the images of each book
 '''
 
 import csv
+import os
 
 from bs4 import BeautifulSoup
 import requests
@@ -24,24 +25,6 @@ def get_list(elements):
     for element in elements:
         result.append(element)
     return result
-
-
-"""
-# Recuperation des url des catégories
-url = "https://books.toscrape.com/index.html"
-content_url = get_content_url(url)
-
-
-list_url_category = []
-for link in content_url.find("div", class_="side_categories").find_all("a"):
-	list_url_category.append(url[0:-10] + link.get("href"))
-
-del list_url_category[0]
-
-print(len(list_url_category))
-print(type(list_url_category))
-print(list_url_category)
-"""
 
 
 url_category_main = (
@@ -204,10 +187,14 @@ with open(f"data_book_of_{category[0]}.csv", "w") as csv_scraper:
         )
 
 # Download image
+directory = os.mkdir(category[0])
+
 url_img_to_download = dict(zip(title, all_img_url))
 
 for title, img in url_img_to_download.items():
-    f = open(f"{title[0:20]}.jpg", "wb")
+
+    file = open(f"{category[0]}/{title[0:20]}.jpg", "wb")
     response = requests.get(img)
-    f.write(response.content)
-    f.close()
+    file.write(response.content)
+    file.close()
+
