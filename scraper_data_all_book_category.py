@@ -13,7 +13,11 @@ import requests
 
 
 def get_content_url(url):
-    """Récupérer le contenu d'une page à partir de son url"""
+    """
+    Retrieve the content of a page from its url
+    In parameter we will have a url address as a string
+    In return we will have this url parsed. 
+    """
     reponse = requests.get(url)
     page = reponse.content
     soup = BeautifulSoup(page, "html.parser")
@@ -21,14 +25,30 @@ def get_content_url(url):
 
 
 def get_list(elements):
+    """
+    Retrieves elements in the form of a list
+    In parameter we have one of the element
+    which will pass in a loop
+    to get all the elements
+    and put them in a list 
+    """
     result = []
     for element in elements:
         result.append(element)
     return result
 
+def replace_caracter(string,origin,new): 
+    """
+    Replaces a specific string into a new string 
+    Takes as parameter "origin" the characters to replace 
+    Takes as parameter "new" the new characters
+    In return we have "new_string" the new string 
+    """
+    new_string = string.replace(origin,new)
+    return new_string
 
 url_category_main = (
-    "https://books.toscrape.com/catalogue/category/books/travel_2/index.html"
+    "https://books.toscrape.com/catalogue/category/books/mystery_3/index.html"
 )
 
 content_url_main = get_content_url(url_category_main)
@@ -41,7 +61,8 @@ list_page_category = []
 check_next_page = content_url_main.find("li", class_="next")
 
 if check_next_page == None:
-    list_page_category = [url_category_main]
+    list_page_category.append(url_category_main)
+
 else:
     next_page = content_url_main.find("li", class_="next").a.get("href")
     clean_next_page = next_page[0:-6]
@@ -110,17 +131,13 @@ price_incl_tax = []
 price_excl_tax = []
 number_available = []
 
-all_td = []
 for url in url_book:
     soup = get_content_url(url)
-    for upc in soup.find_all("td")[0]:
-        all_upc.append(upc)
-    for price_incl in soup.find_all("td")[2]:
-        price_incl_tax.append(price_incl)
-    for price_excl in soup.find_all("td")[3]:
-        price_excl_tax.append(price_excl)
-    for available in soup.find_all("td")[5]:
-        number_available.append(available)
+    all_td = soup.find_all("td")
+    all_upc.append(all_td[0].text)
+    price_incl_tax.append(all_td[2].text)
+    price_excl_tax.append(all_td[3].text)
+    number_available.append(all_td[5].text)
 
 # Url image
 all_img_url = []
@@ -128,73 +145,58 @@ for url in list_page_category:
     content_url = get_content_url(url)
     for img_url in content_url.find_all("img"):
         all_img_url.append(
-            img_url.get("src").replace("../../../../", "https://books.toscrape.com/")
+            replace_caracter(img_url.get("src"),"../../../../", "https://books.toscrape.com/")
         )
 
 
 # Write all data in csv file
-en_tete = [
+columns = [
     "Category",
     "Title",
     "Rating",
-    "UPC",
-    "Price_incl_tax",
-    "Price_excl_tax",
-    "Number_available",
+    "Upc",
+    "Price including tax",
+    "Price excluding tax",
+    "Number available",
     "Description",
-    "Product_page_url",
-    "Image_url",
+    "Product page url",
+    "Image url",
 ]
-with open(f"data_book_of_{category[0]}.csv", "w") as csv_scraper:
-    writer = csv.writer(csv_scraper, delimiter=",")
-    writer.writerow(en_tete)
-    for (
-        Category,
-        Title,
-        Rating,
-        UPC,
-        Price_incl_tax,
-        Price_excl_tax,
-        Number_available,
-        Description,
-        Product_page_url,
-        Image_url,
-    ) in zip(
-        category,
-        title,
-        all_rating,
-        all_upc,
-        price_incl_tax,
-        price_excl_tax,
-        number_available,
-        product_description,
-        url_book,
-        all_img_url,
-    ):
-        writer.writerow(
-            [
-                Category,
-                Title,
-                Rating,
-                UPC,
-                Price_incl_tax,
-                Price_excl_tax,
-                Number_available,
-                Description,
-                Product_page_url,
-                Image_url,
-            ]
-        )
+data_book = [
+    {
+        "Category": category,
+        "Title": title,
+        "Rating": all_rating,
+        "Upc": all_upc,
+        "Price including tax": price_incl_tax,
+        "Price excluding tax": price_excl_tax,
+        "Number available": number_available,
+        "Description": product_description,
+        "Product page url": url_book,
+        "Image url": all_img_url,
+    }
+]
+with open(f"data_book_of_{category[0]}.csv", "w", newline="") as file_csv:
+    writer = csv.DictWriter(file_csv, delimiter=";", fieldnames=columns)
+    writer.writeheader()
+    for data in data_book:
+        writer.writerow(data)
+
+   
+# Reduce the number of characters in the title
+reduce_title = []
+for titles in title :
+    reduce_title.append(titles[0:20])
+
+# Make dictionary with title in key and image in value
+url_img_to_download = dict(zip(reduce_title, all_img_url))
 
 # Download image
 directory = os.mkdir(category[0])
 
-url_img_to_download = dict(zip(title, all_img_url))
+for titles, img in url_img_to_download.items():
 
-for title, img in url_img_to_download.items():
-
-    file = open(f"{category[0]}/{title[0:20]}.jpg", "wb")
+    file = open(f"{category[0]}/{titles}.jpg", "wb")
     response = requests.get(img)
     file.write(response.content)
     file.close()
-
