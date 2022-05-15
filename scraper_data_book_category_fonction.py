@@ -198,11 +198,42 @@ def download_img():
         file.close()
 
 
+def main():
+
+    """
+    Fonction principale qui récupère toutes les données
+    de tous les livres par catégorie
+    les ecris dans un fichier csv 
+    et télécharge les images des livres
+    """
+
+    # recupérer la liste des catégories à partir de l'url principale du site.
+    # list_category = extract_category_url("https://books.toscrape.com/index.html")
+    list_category = ["https://books.toscrape.com/catalogue/category/books/mystery_3/index.html"]
+
+    # pour chacune des catégories de la liste list_category
+    # recupérer toutes les pages de la catégorie
+    for url in list_category:
+        list_page_category = extract_category_page_url(url)
+
+        # pour chacune des page de la liste list_page_category
+        # recupérer toutes les url des livres
+        for page_url in list_page_category:
+            list_book_url = extract_book_url(page_url)
+            
+            # pour chacun des livres de la liste list_book_url
+            # recupérer toutes les détails des livres
+            # et remplir la liste list_book_details avec ces détails 
+            for book in list_book_url:
+                list_book_details = []
+                details = extract_book_details(book)
+                list_book_details.append(details)
+        
+        print(list_book_details)
+        print(len(list_book_details))
+        print(type(list_book_details))
+
+
+    
 if __name__ == "__main__":
-
-    url = "https://books.toscrape.com/index.html"
-    test = extract_category_url(url) 
-
-print(test)
-print(len(test))
-print(type(test))
+    main()
