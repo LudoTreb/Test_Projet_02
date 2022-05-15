@@ -15,44 +15,45 @@ import requests
 def get_content_url(url):
     """
     Get the content of web page from is url.
-            
-            Parameters: 
-                    url (str): A string 
+
+            Parameters:
+                    url (str): A string
 
             Returns:
-                    soup (str): the url parsed 
+                    soup (str): the url parsed
     """
     reponse = requests.get(url)
     page = reponse.content
     soup = BeautifulSoup(page, "html.parser")
     return soup
 
-def replace_caracter(string,origin,new): 
+
+def replace_caracter(string, origin, new):
     """
-    Replaces a specific string into a new string 
-            
+    Replaces a specific string into a new string
+
             Parameters:
                     string (str): the string with caracter to replace
-                    origin (str): the character to replace 
+                    origin (str): the character to replace
                     new (str): the new characters
-            
+
             Returns:
-                    new_tring (str): the new string with caractere replaced 
+                    new_tring (str): the new string with caractere replaced
     """
-    new_string = string.replace(origin,new)
+    new_string = string.replace(origin, new)
     return new_string
 
 
 def convert_rating(rate):
     """
-    Convert number that are string to alpha numeric 
+    Convert number that are string to alpha numeric
 
-            Parameters: 
+            Parameters:
                     rate (string): numbre in string
 
             Returns:
                     rating (string): number in alpha numeric and on five
-                                        example: "Four"-->"4"-->"4/5" 
+                                        example: "Four"-->"4"-->"4/5"
 
     """
     rating_dict = {"One": "1", "Two": "2", "Three": "3", "Four": "4", "Five": "5"}
@@ -64,7 +65,7 @@ def extract_book_details(url: str):
     """
     Get all details on ulr of a book
 
-            Parameters: 
+            Parameters:
                     url (str): a url of one book
 
             Returns:
@@ -79,9 +80,11 @@ def extract_book_details(url: str):
     price_incl_tax = soup.find_all("td")[2].string
     price_excl_tax = soup.find_all("td")[3].string
     number_available = soup.find_all("td")[5].string
-    img_url = replace_caracter(soup.find("img").get("src"),"../../","https://books.toscrape.com/" )
+    img_url = replace_caracter(
+        soup.find("img").get("src"), "../../", "https://books.toscrape.com/"
+    )
     product_url = url
-    
+
     book = {
         "category": category,
         "title": title,
@@ -98,7 +101,7 @@ def extract_book_details(url: str):
     return book
 
 
-def extract_book_url(url:str):
+def extract_book_url(url: str):
     """
     Get all url's book of one category
 
@@ -108,11 +111,15 @@ def extract_book_url(url:str):
             Returns:
                     list_url_book (list): a list of url's book
     """
-    list_url_book =[]
+    list_url_book = []
     soup = get_content_url(url)
     for article in soup.find_all("article"):
         link = article.find("a")
-        list_url_book.append(replace_caracter(link.get("href"),"../../../", "http://books.toscrape.com/catalogue/"))
+        list_url_book.append(
+            replace_caracter(
+                link.get("href"), "../../../", "http://books.toscrape.com/catalogue/"
+            )
+        )
 
     return list_url_book
 
@@ -128,9 +135,9 @@ def extract_category_page_url(url):
                     list_page_category (list): a list of url's page of one category
     """
     soup = get_content_url(url)
-    
-    url_clean  = replace_caracter(url,"index.html", "")
-    
+
+    url_clean = replace_caracter(url, "index.html", "")
+
     check_next_page = soup.find("li", class_="next")
 
     list_page_category = []
@@ -164,7 +171,7 @@ def extract_category_url(url):
     """
     soup = get_content_url(url)
 
-    url_clean  = replace_caracter(url,"index.html", "")
+    url_clean = replace_caracter(url, "index.html", "")
 
     list_category = []
     for link in soup.find("div", class_="side_categories").find_all("a"):
@@ -178,15 +185,16 @@ def extract_category_url(url):
 def write_csv(dictionary):
     """
     Write a csv file for each category from a dictionary
-            
-            Parameters: 
+
+            Parameters:
                     dictionary (dict): dictionary of all the book's details of one category
 
             Returns:
                     .csv: a csv file for each category
 
     """
-    columns = ["category",
+    columns = [
+        "category",
         "title",
         "description",
         "rating",
@@ -195,11 +203,14 @@ def write_csv(dictionary):
         "price_excl_tax",
         "number_available",
         "img_url",
-        "product_url"] 
+        "product_url",
+    ]
 
     data_book = dictionary
 
-    with open(f"exports/data_book_of_{data_book[0]['category']}.csv", "w", newline="") as file_csv:
+    with open(
+        f"exports/{data_book[0]['category']}/data_book_of_{data_book[0]['category']}.csv", "w", newline=""
+    ) as file_csv:
         writer = csv.DictWriter(file_csv, delimiter=";", fieldnames=columns)
         writer.writeheader()
         writer.writerows(data_book)
@@ -209,26 +220,24 @@ def download_img(dictionary):
     """
     Download all book's image for each category in a specific directory.
 
-            Parameters: 
+            Parameters:
                     dictionary (dict): dictionary of all the book's details of one category
 
             Returns:
-                    .jpg: all image's book for each category in specific directory 
+                    .jpg: all image's book for each category in specific directory
 
     """
-    # Reduce the number of characters in the title and clean it
+    # reduce the number of characters in the title and clean it
     reduce_clean_title = []
     for titles in dictionary:
         list_title = titles.get("title")
-        reduce_clean_title.append(replace_caracter(list_title[0:20],"/","_"))
-    
+        reduce_clean_title.append(replace_caracter(list_title[0:20], "/", "_"))
 
     list_img_url = []
     for url in dictionary:
         all_url_img = url.get("img_url")
         list_img_url.append(all_url_img)
-    
-   
+
     # Download image
     directory = os.makedirs(f"exports/{dictionary[0]['category']}")
 
@@ -240,7 +249,7 @@ def download_img(dictionary):
         response = requests.get(img)
         file.write(response.content)
         file.close()
-  
+
 
 def main():
 
@@ -249,24 +258,28 @@ def main():
     Write them in csv file and dowload images of the books
     """
 
-    # Get a list of categories from the main url of the site.
+    # get a list of categories from the main url of the site.
     list_category = extract_category_url("https://books.toscrape.com/index.html")
-
-    # Get a list of all url's pages for each category
+    counter = []
+    # get a list of all url's pages for each category
     for url in list_category:
+        counter.append(url)
         list_page_category = extract_category_page_url(url)
 
-        # Get a list of all book's details
+        # get a list of all book's details
         list_book_details = []
+       
         for page_url in list_page_category:
             list_book_url = extract_book_url(page_url)
 
             for book in list_book_url:
-                
+
                 details = extract_book_details(book)
                 list_book_details.append(details)
         
-        
+
+        print(f" {len(counter)}/50 The {list_book_details[0]['category']} category being extracted")
+
         download_img(list_book_details)
 
         write_csv(list_book_details)
