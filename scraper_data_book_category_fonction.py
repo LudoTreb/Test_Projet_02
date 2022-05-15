@@ -14,9 +14,13 @@ import requests
 
 def get_content_url(url):
     """
-    Récupére le contenu d'une page à partir de son url
-    En paramètre on aura une adresse url sous forme d'une chaine de caractère
-    En retour on aura cette url parsée.
+    Get the content of web page from is url.
+            
+            Parameters: 
+                    url (str): A string 
+
+            Returns:
+                    soup (str): the url parsed 
     """
     reponse = requests.get(url)
     page = reponse.content
@@ -26,9 +30,14 @@ def get_content_url(url):
 def replace_caracter(string,origin,new): 
     """
     Replaces a specific string into a new string 
-    Takes as parameter "origin" the characters to replace 
-    Takes as parameter "new" the new characters
-    In return we have "new_string" the new string 
+            
+            Parameters:
+                    string (str): the string with caracter to replace
+                    origin (str): the character to replace 
+                    new (str): the new characters
+            
+            Returns:
+                    new_tring (str): the new string with caractere replaced 
     """
     new_string = string.replace(origin,new)
     return new_string
@@ -36,32 +45,35 @@ def replace_caracter(string,origin,new):
 
 def convert_rating(rate):
     """
-    Convertir des nombres qui sont en chaine de caractere
-    en alpha numérique 
-    En parametre on recoit un nombre en chaine de caractere
-    Qui passe dans un dictionnaire qui renvoit ce nombre en alpha numérique
-    et on le présente sous forme de note sur 5 
-    exemple "Four" --> "4" --> "4/5"
-    En retour on a la note sur 5
+    Convert number that are string to alpha numeric 
+
+            Parameters: 
+                    rate (string): numbre in string
+
+            Returns:
+                    rating (string): number in alpha numeric and on five
+                                        example: "Four"-->"4"-->"4/5" 
+
     """
     rating_dict = {"One": "1", "Two": "2", "Three": "3", "Four": "4", "Five": "5"}
     rating = rating_dict[rate] + "/5"
     return rating
 
 
-
 def extract_book_details(url: str):
     """
-    Recupère tous les éléments dur la page d'un livre
-    En paramètre on a une une string url
-    La fonction va chercher tous les éléments
-    et les rangent dans un dictionnaire
-    En retour on a ce dictionnaire
+    Get all details on ulr of a book
+
+            Parameters: 
+                    url (str): a url of one book
+
+            Returns:
+                    book (dict): a dictionary with all details of a book
     """
     soup = get_content_url(url)
     category = soup.find_all("a")[3].string
     title = soup.find("h1").string
-    description = []#soup.find_all("p")[3].string
+    description = soup.find_all("p")[3].string
     rating = convert_rating(soup.find_all("p", class_="star-rating")[0].get("class")[1])
     upc = soup.find_all("td")[0].string
     price_incl_tax = soup.find_all("td")[2].string
@@ -85,13 +97,16 @@ def extract_book_details(url: str):
 
     return book
 
+
 def extract_book_url(url:str):
     """
-    Récupère toutes les url des livres d'une catégorie
-    En paramètres on a une string url 
-    La fonction va chercher toutes les url des livres 
-    pour une catégorie et les rangent dans une liste.
-    En retour on a cette liste
+    Get all url's book of one category
+
+            Parameters:
+                    url (str): a url's page of category
+
+            Returns:
+                    list_url_book (list): a list of url's book
     """
     list_url_book =[]
     soup = get_content_url(url)
@@ -101,14 +116,16 @@ def extract_book_url(url:str):
 
     return list_url_book
 
+
 def extract_category_page_url(url):
     """
-    Récupère toutes les url des pages d'une catégorie 
-    En paramètres on a une string url 
-    La fonction vérifie si il y a plusieurs page/url à la catégorie
-    Si non on retourne une liste avec seulement l'url de la page
-    Si oui on retourne une liste avec l'url de toutes les pages de la catégorie.
-    En retour on a donc cette liste
+    Get all url's page of one category
+
+            Parameters:
+                    url (str): a url category
+
+            Returns:
+                    list_page_category (list): a list of url's page of one category
     """
     soup = get_content_url(url)
     
@@ -134,13 +151,16 @@ def extract_category_page_url(url):
 
     return list_page_category
 
+
 def extract_category_url(url):
     """
-    Récupère toutes les url des catégories 
-    En paramètres on a une string url 
-    La fonction va chercher toutes les url des catégories
-    Et les range dans une liste
-    En retour on a cette liste
+    Get all url's category
+
+            Parameters:
+                    url (str): url of the website
+
+            Returns:
+                    list_category (list): a list of url's category
     """
     soup = get_content_url(url)
 
@@ -155,85 +175,102 @@ def extract_category_url(url):
     return list_category
 
 
-def write_csv():
+def write_csv(dictionary):
     """
-    Ecrire les infos récupérés dans un fichier csv
-    En paramètre on a notre dictionnaire rempli de données ?
-    La fonction va écrire dans un fichier csv 
-    toutes les données récupérer sur les livre 
-    pour une catégorie de livre
-    Le nom du fichier csv a le nom de la catégorie.
-    """
-    columns = [] #l'entete peut-etre recupérer avec le dictionnaire ? juste les clés 
-    data_book = [] #ici notre dictionnaire
+    Write a csv file for each category from a dictionary
+            
+            Parameters: 
+                    dictionary (dict): dictionary of all the book's details of one category
 
-    with open(f"data_book_of_{category[0]}.csv", "w", newline="") as file_csv:
+            Returns:
+                    .csv: a csv file for each category
+
+    """
+    columns = ["category",
+        "title",
+        "description",
+        "rating",
+        "upc",
+        "price_incl_tax",
+        "price_excl_tax",
+        "number_available",
+        "img_url",
+        "product_url"] 
+
+    data_book = dictionary
+
+    with open(f"exports/data_book_of_{data_book[0]['category']}.csv", "w", newline="") as file_csv:
         writer = csv.DictWriter(file_csv, delimiter=";", fieldnames=columns)
         writer.writeheader()
-        writer.writerows(databook)
+        writer.writerows(data_book)
 
 
-def download_img():
+def download_img(dictionary):
     """
-    Télécharge toutes les images des livres d'une catégorie dans un dossier
-    En paramètre on a notre dictionnaire rempli de données ? 
-    La fonction créer un dossier au nom de la catégorie
-    et écrit dans le dossier toutes les images de des livres de la catégorie.
-    """
-    # reduce the number of characters in the title
-    reduce_title = []
-    for titles in title:
-        reduce_title.append(titles[0:20])
+    Download all book's image for each category in a specific directory.
 
+            Parameters: 
+                    dictionary (dict): dictionary of all the book's details of one category
+
+            Returns:
+                    .jpg: all image's book for each category in specific directory 
+
+    """
+    # Reduce the number of characters in the title and clean it
+    reduce_clean_title = []
+    for titles in dictionary:
+        list_title = titles.get("title")
+        reduce_clean_title.append(replace_caracter(list_title[0:20],"/","_"))
+    
+
+    list_img_url = []
+    for url in dictionary:
+        all_url_img = url.get("img_url")
+        list_img_url.append(all_url_img)
+    
+   
     # Download image
-    directory = os.mkdir(category[0])
+    directory = os.makedirs(f"exports/{dictionary[0]['category']}")
 
-    url_img_to_download = dict(zip(reduce_title, all_img_url))
+    url_img_to_download = dict(zip(reduce_clean_title, list_img_url))
 
     for titles, img in url_img_to_download.items():
 
-        file = open(f"{category[0]}/{titles}.jpg", "wb")
+        file = open(f"exports/{dictionary[0]['category']}/{titles}.jpg", "wb")
         response = requests.get(img)
         file.write(response.content)
         file.close()
-
+  
 
 def main():
 
     """
-    Fonction principale qui récupère toutes les données
-    de tous les livres par catégorie
-    les ecris dans un fichier csv 
-    et télécharge les images des livres
+    Main function get all details of book for all categories
+    Write them in csv file and dowload images of the books
     """
 
-    # recupérer la liste des catégories à partir de l'url principale du site.
-    # list_category = extract_category_url("https://books.toscrape.com/index.html")
-    list_category = ["https://books.toscrape.com/catalogue/category/books/mystery_3/index.html"]
+    # Get a list of categories from the main url of the site.
+    list_category = extract_category_url("https://books.toscrape.com/index.html")
 
-    # pour chacune des catégories de la liste list_category
-    # recupérer toutes les pages de la catégorie
+    # Get a list of all url's pages for each category
     for url in list_category:
         list_page_category = extract_category_page_url(url)
 
-        # pour chacune des page de la liste list_page_category
-        # recupérer toutes les url des livres
+        # Get a list of all book's details
+        list_book_details = []
         for page_url in list_page_category:
             list_book_url = extract_book_url(page_url)
-            
-            # pour chacun des livres de la liste list_book_url
-            # recupérer toutes les détails des livres
-            # et remplir la liste list_book_details avec ces détails 
+
             for book in list_book_url:
-                list_book_details = []
+                
                 details = extract_book_details(book)
                 list_book_details.append(details)
         
-        print(list_book_details)
-        print(len(list_book_details))
-        print(type(list_book_details))
+        
+        download_img(list_book_details)
+
+        write_csv(list_book_details)
 
 
-    
 if __name__ == "__main__":
     main()
