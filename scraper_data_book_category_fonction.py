@@ -239,13 +239,13 @@ def download_img(dictionary):
         list_img_url.append(all_url_img)
 
     # Download image
-    directory = os.makedirs(f"exports/{dictionary[0]['category']}")
+    directory = os.makedirs(f"exports/{dictionary[0]['category']}/images")
 
     url_img_to_download = dict(zip(reduce_clean_title, list_img_url))
 
     for titles, img in url_img_to_download.items():
 
-        file = open(f"exports/{dictionary[0]['category']}/{titles}.jpg", "wb")
+        file = open(f"exports/{dictionary[0]['category']}/images/{titles}.jpg", "wb")
         response = requests.get(img)
         file.write(response.content)
         file.close()
@@ -278,7 +278,7 @@ def main():
                 list_book_details.append(details)
         
 
-        print(f" {len(counter)}/50 The {list_book_details[0]['category']} category being extracted")
+        print(f"{len(counter)}/50 The {list_book_details[0]['category']} category being extracted")
 
         download_img(list_book_details)
 
