@@ -10,19 +10,19 @@ write them into a csv file and download images of cover books.
 
 Create a virtualenv for the project with Python 3.10.4  
     
-    ```python
+    
     python -m venv env 
     source env/bin/activate
     pip install -r requirements.txt 
-    ``` 
+    
 
 ## Run the project  
 
 Run this command:  
 
-    ```python
+    
     python3 scraper_data_book_category_fonction.py
-    ```
+    
 
 ## What i leanerd with this project  
 
